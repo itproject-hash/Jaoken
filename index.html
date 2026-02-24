@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>სამშენებლო კალკულატორი — პრო</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="mobile-top-bar">
+    <button class="burger-menu-btn" onclick="toggleSidebar()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-brand-name">Jaokeni</div>
+  </div>
+  <aside class="sidebar">
+    <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </div>
+      
+      <div class="brand-text">
+        <span class="brand-name">Jaokeni</span>
+        <span class="brand-version">v1.0 pro</span>
+      </div>
+    </div>
+    <div class="material-switcher">
+      <span class="nav-label">მასალა</span>
+      <button class="material-tab active" data-material="tiles" id="tabTiles">
+        <span class="material-tab-icon"><svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M2 2h7v7H2zm9 0h7v7h-7zm0 9h7v7h-7zM2 11h7v7H2z"/></svg></span>
+        <span class="material-tab-text"><span class="material-tab-name">ფილები</span><span class="material-tab-sub">Tile Calculator</span></span>
+        <span class="material-tab-dot material-tab-dot--blue"></span>
+      </button>
+      <button class="material-tab" data-material="wallpaper" id="tabWallpaper">
+        <span class="material-tab-icon"><svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm1 2v10h10V5H5zm2 1h2v8H7V6zm4 0h2v8h-2V6z"/></svg></span>
+        <span class="material-tab-text"><span class="material-tab-name">შპალერი</span><span class="material-tab-sub">Wallpaper Calculator</span></span>
+        <span class="material-tab-dot material-tab-dot--rose"></span>
+      </button>
+    </div>
+    <nav class="sidebar-nav" id="navTiles">
+      <span class="nav-label">განყოფილებები</span>
+      <a href="#" class="nav-item active" data-section="surface"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h14v14H3z"/></svg>ზედაპირი</a>
+      <a href="#" class="nav-item" data-section="openings"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="12" height="18" rx="1"/><line x1="10" y1="11" x2="10" y2="13"/></svg>დამატებით გამოქვითვა</a>
+      <a href="#" class="nav-item" data-section="layout"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h4a1 1 0 010 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 010 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h8a1 1 0 010 2H4a1 1 0 01-1-1z"/></svg>დაგების სტილი</a>
+      <a href="#" class="nav-item" data-section="tile"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 2h7v7H2zm9 0h7v7h-7zm0 9h7v7h-7zM2 11h7v7H2z"/></svg>ფილა</a>
+      <a href="#" class="nav-item" data-section="results"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 16l4-8 4 4 4-6 4 10H2z"/></svg>შედეგები</a>
+    </nav>
+    <nav class="sidebar-nav" id="navWallpaper" style="display:none">
+      <span class="nav-label">განყოფილებები</span>
+      <a href="#" class="nav-item active" data-wp-section="wp-wall"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h14v14H3z"/></svg>კედელი</a>
+      <a href="#" class="nav-item" data-wp-section="wp-roll"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 2a6 6 0 010 12A6 6 0 0110 4zm0 2a4 4 0 100 8 4 4 0 000-8z"/></svg>რულონი</a>
+      <a href="#" class="nav-item" data-wp-section="wp-results"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 16l4-8 4 4 4-6 4 10H2z"/></svg>შედეგები</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">SC</div>
+        <div class="user-info"><span class="user-name">Sales Consultant</span><span class="user-role">კონსულტანტი</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- <div class="mobile-brand">CalcPro</div> -->
+  
+    <!-- TILES APP -->
+    <div id="appTiles" class="app-view">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-material-badge badge--blue"><svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11"><path d="M1 1h6v6H1zm8 0h6v6H9zM1 9h6v6H1zm8 0h6v6H9z"/></svg>ფილები</div>
+          <h1 class="page-title">ჭკვიანი ფილების კალკულატორი</h1>
+          <p class="page-subtitle">შეიყვანეთ პარამეტრები ზუსტი გამოთვლისთვის</p>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost" id="resetBtn"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M4 4v5h5M16 16v-5h-5M4.09 9a7 7 0 110 2"/></svg>გადატვირთვა</button>
+          <button class="btn btn-primary" onclick="runCalculation()" id="calculateBtn"><svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/></svg>გამოთვლა</button>
+        </div>
+      </header>
+      <div class="content-grid">
+        <div class="input-column">
+          <section class="card" id="section-surface">
+            <div class="card-header">
+              <div class="card-icon card-icon--blue"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h14v14H3z"/></svg></div>
+              <div><h2 class="card-title">ზედაპირის ზომები</h2><p class="card-desc">კედლის ან იატაკის განზომილებები</p></div>
+            </div>
+            
+            <div class="card-section">
+  <div class="section-header">
+     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+        <span class="form-label" style="margin-bottom: 0;">გამოთვლის მეთოდი:</span>
+        <div class="toggle-container" onclick="toggleCalcMode()">
+            <div id="modeToggleBtn" class="toggle-switch">
+                <span class="mode-label details">დეტალური</span>
+                <span class="mode-label quick">სწრაფი</span>
+                <div class="toggle-handle"></div>
+            </div>
+        </div>
+    </div>
+    <h3 class="section-title"><i class="fas fa-border-all"></i> მოსაპირკეთებელი კედლები</h3>
+    <button type="button" id="addWallBtn" class="btn-secondary btn-sm">
+      <i class="fas fa-plus"></i> კედლის დამატება
+    </button>
+    <div class="calc-mode-selector card-sub-item" style="margin-bottom: 20px;">
+   
+
+    <div id="quickAreaBlock" style="display: none; animation: fadeIn 0.3s;">
+        <label class="form-label">ოთახის მთლიანი ფართობი</label>
+        <div class="input-wrap">
+            <input type="number" id="directAreaInput" class="form-input" placeholder="მაგ: 25">
+            <span class="input-unit">მ²</span>
+        </div>
+        <div class="batch-warning-card advice ">
+            <div class="bwc-icon">⚠️</div>
+            <div class="bwc-body "><div class="bwc-title">რჩევა:</strong> ეს რეჟიმი საუკეთესოა <strong>იატაკის</strong> ან მარტივი ზედაპირების დასათვლელად. კედლებისთვის, სადაც ბევრი კარ-ფანჯარაა, გამოიყენეთ <strong>დეტალური</strong> რეჟიმი.</div>
+          </div>
+    </div>
+</div>
+    
+  </div>
+
+  <div id="wallsList" class="walls-container">
+  <div class="wall-item card-sub-item" id="wall-initial">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">კედლის სიგრძე (მ)</label>
+        <div class="input-wrap">
+          <input type="number" class="form-input wall-width" placeholder="0.00" step="0.01" value="3.00">
+          <span class="input-unit">მ</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">კედლის სიმაღლე (მ)</label>
+        <div class="input-wrap">
+          <input type="number" class="form-input wall-height" placeholder="2.50" step="0.01" value="2.50">
+          <span class="input-unit">მ</span>
+        </div>
+      </div>
+      <button type="button" class="btn-remove-wall" onclick="this.closest('.wall-item').remove(); updateLivePreview(); if(typeof runCalculation === 'function') runCalculation();" title="წაშლა">
+        <i class="fas fa-times">&times</i>
+      </button>
+    </div>
+  </div>
+</div>
+              
+             <div class="info-banner">
+  <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 11H7V7h2v4zm0-6H7V3h2v2z"/>
+  </svg>
+  <!-- <span>ჯამური სიგრძე: <strong id="totalLengthDisplay">0.00 მ</strong></span> -->
+  <span style="margin-left: 15px;">ჯამური ფართობი: <strong id="grossAreaDisplay">0.00 მ²</strong></span>
+</div>
+            
+          </section>
+          <section class="card" id="section-openings">
+            <div class="card-header">
+              <div class="card-icon card-icon--amber"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="12" height="18" rx="1"/><line x1="10" y1="11" x2="10" y2="13"/></svg></div>
+              <div><h2 class="card-title">გამოქვითვა</h2><p class="card-desc">კარები და ფანჯრები — გამოქვითვა</p></div>
+              <button class="btn btn-sm btn-outline ml-auto" id="addOpeningBtn">+ დამატება</button>
+            </div>
+            <div class="card-body">
+              <div id="openingsList" class="openings-list">
+                <div class="empty-state" id="emptyOpenings"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><rect x="10" y="6" width="28" height="40" rx="2"/><line x1="24" y1="26" x2="24" y2="30"/></svg><p>გამოქვითვა არ არის</p><span>დააჭირეთ "+ დამატება"</span></div>
+              </div>
+              <div class="deduction-bar" id="deductionBar" style="display:none"><span>სულ გამოქვითვა:</span><strong id="totalDeductionDisplay">0.00 მ²</strong></div>
+            </div>
+          </section>
+          <section class="card" id="section-layout">
+            <div class="card-header">
+              <div class="card-icon card-icon--teal"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h4a1 1 0 010 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 010 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h8a1 1 0 010 2H4a1 1 0 01-1-1z"/></svg></div>
+              <div><h2 class="card-title">დაგების სტილი</h2><p class="card-desc">სტილი ავტომატურად განსაზღვრავს ნარჩენ პროცენტს</p></div>
+            </div>
+            <div class="card-body">
+              <div class="pattern-grid" id="patternGrid">
+               <button class="pattern-btn" data-pattern="custom" aria-pressed="false">
+  <div class="pattern-preview pattern-preview--custom">
+    <div class="pp-tile"></div>
+  </div>
+  <div class="pattern-info">
+    <span class="pattern-name">მორგებული</span>
+    <span class="pattern-desc">ზუსტი დათვლა (0%)</span>
+  </div>
+  <span class="pattern-waste-tag">0%</span> 
+</button>
+                
+                <button class="pattern-btn" data-pattern="standard" aria-pressed="false">
+                  <div class="pattern-preview pattern-preview--standard"><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div><div class="pp-tile"></div></div>
+                  <div class="pattern-info"><span class="pattern-name">სტანდარტული</span><span class="pattern-desc">პირდაპირი, ბადისებური</span></div>
+                  <span class="pattern-waste-tag">5%</span>
+                </button>
+                <button class="pattern-btn" data-pattern="brick" aria-pressed="false">
+                  <div class="pattern-preview pattern-preview--brick"><div class="pp-row"><div class="pp-tile pp-wide"></div><div class="pp-tile pp-wide"></div></div><div class="pp-row pp-offset"><div class="pp-tile pp-wide"></div><div class="pp-tile pp-wide"></div></div><div class="pp-row"><div class="pp-tile pp-wide"></div><div class="pp-tile pp-wide"></div></div></div>
+                  <div class="pattern-info"><span class="pattern-name">აგურისებური</span><span class="pattern-desc">ნახევრით წანაცვლება</span></div>
+                  <span class="pattern-waste-tag">10%</span>
+                </button>
+                <button class="pattern-btn" data-pattern="diagonal" aria-pressed="false">
+                  <div class="pattern-preview pattern-preview--diagonal"><div class="pp-diamond"></div><div class="pp-diamond pp-d2"></div><div class="pp-diamond pp-d3"></div></div>
+                  <div class="pattern-info"><span class="pattern-name">დიაგონალური</span><span class="pattern-desc">45° კუთხით დაგება</span></div>
+                  <span class="pattern-waste-tag">15%</span>
+                </button>
+              </div>
+              <div class="pattern-active-banner" id="patternActiveBanner" style="display:none">
+                <div class="pab-left"><svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13"><path d="M16 8A8 8 0 110 8a8 8 0 0116 0zm-3.97-3.03a.75.75 0 00-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 00-1.06 1.061L6.97 11.03a.75.75 0 001.079-.02l3.992-4.99a.75.75 0 00-.01-1.05z"/></svg><span id="patternActiveName">—</span> — ნარჩენი ავტომატურად დაყენდა:</div>
+                <strong id="patternActiveWaste">—</strong>
+              </div>
+            </div>
+          </section>
+          <section class="card" id="section-tile">
+            <div class="card-header">
+              <div class="card-icon card-icon--green"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 2h7v7H2zm9 0h7v7h-7zm0 9h7v7h-7zM2 11h7v7H2z"/></svg></div>
+              <div><h2 class="card-title">ფილის პარამეტრები</h2><p class="card-desc">ზომა, ფილებშორის სივრცე, ნარჩენი, კოლოფი</p></div>
+            </div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+    <label class="form-label" for="tileLength">ფილის სიგრძე</label>
+    <div class="input-wrap">
+        <input class="form-input" type="number" id="tileLength" value="120" min="1" step="1" />
+        <span class="input-unit">სმ</span>
+    </div>
+</div>
+<div class="form-group">
+    <label class="form-label" for="tileWidth">ფილის სიგანე</label>
+    <div class="input-wrap">
+        <input class="form-input" type="number" id="tileWidth" value="60" min="1" step="1" />
+        <span class="input-unit">სმ</span>
+    </div>
+</div>
+              </div>
+              <div class="divider"></div>
+              <div class="form-row form-row--three">
+                <div class="form-group"><label class="form-label" for="groutJoint">ფილებშორის სივრცე</label><div class="input-wrap"><input class="form-input" type="number" id="groutJoint" value="3" min="0" step="0.5" /><span class="input-unit">მმ</span></div></div>
+                <div class="form-group"><label class="form-label" for="wastePct">ნარჩენი <span class="label-badge" id="wasteBadge">0%</span></label><input class="range-input" type="range" id="wastePct" min="0" max="30" value="0" step="1" /></div>
+                <div class="form-group"><label class="form-label" for="sqmPerBox">მ² / კოლოფი</label><div class="input-wrap"><input class="form-input" type="number" id="sqmPerBox" value="1.44" min="0.01" step="0.01" /><span class="input-unit">მ²</span></div></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="output-column">
+          <section class="card card--dark" id="section-preview">
+            <div class="card-header">
+              <div class="card-icon card-icon--purple">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10z" clip-rule="evenodd"/></svg>
+              </div>
+              <div><h2 class="card-title">ვიზუალური გეგმა</h2><p class="card-desc">ფილების განლაგება</p></div>
+            </div>
+            <!-- preview-scroll-container: JS injects one canvas per wall here -->
+            <div class="card-body canvas-body" style="padding:0; overflow:hidden;">
+              <div id="preview-scroll-container" style="
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                scroll-behavior: smooth;
+                min-height: 280px;
+                width: 100%;
+              ">
+                <!-- wall panels injected by updateLivePreview() -->
+              </div>
+            </div>
+            <!-- hidden legacy canvas kept for any remaining direct references -->
+            <canvas id="previewCanvas" style="display:none"></canvas>
+          </section>
+          <section class="card results-card" id="section-results">
+            <div class="results-hero"><div class="hero-label">საჭირო ფილები</div><div class="hero-number" id="rTilesCount">—</div><div class="hero-sub">ფილა (დამრგვალებული)</div></div>
+            <div class="metrics-grid">
+              <div class="metric"><div class="metric-value" id="rBoxes">—</div><div class="metric-label">საჭირო კოლოფები</div></div>
+              <div class="metric"><div class="metric-value" id="rPurchaseSqm">—</div><div class="metric-label">შესყიდვის მ²</div></div>
+              <div class="metric"><div class="metric-value" id="rNetSqm">—</div><div class="metric-label">წმინდა ფართობი</div></div>
+              <div class="metric"><div class="metric-value" id="rWasteTiles">—</div><div class="metric-label">ნარჩენი ფილები</div></div>
+            </div>
+            <div class="stats-table">
+              <div class="stats-row"><span>დაგების სტილი</span><span id="sLayout" class="mono">—</span></div>
+              <div class="stats-row"><span>ჯამური ფართობი</span><span id="sGross" class="mono">—</span></div>
+              <div class="stats-row"><span>გამოქვითვა</span><span id="sDeduction" class="mono deduction">—</span></div>
+              <div class="stats-row stats-row--accent"><span>წმინდა ფართობი</span><span id="sNet" class="mono">—</span></div>
+              <div class="stats-row"><span>ფილის ფართობი (ნაკეთობით)</span><span id="sTileArea" class="mono">—</span></div>
+              <div class="stats-row"><span>ფილები (ნარჩენის გარეშე)</span><span id="sBaseCount" class="mono">—</span></div>
+              <div class="stats-row stats-row--accent"><span>სულ ფილები (ნარჩენით)</span><span id="sFinalCount" class="mono">—</span></div>
+              
+            </div>
+            <div class="results-actions"><button class="btn btn-copy" id="copyBtn"><svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>შედეგის კოპირება</button></div>
+            <button onclick="exportToPDF()" class="btn-primary pdf-btn" style="margin-top: 20px; width: 100%; background: var(--green);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                  </svg>
+                  ანგარიშის ჩამოტვირთვა (PDF)
+              </button>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- WALLPAPER APP -->
+    <div id="appWallpaper" class="app-view" style="display:none">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-material-badge badge--rose"><svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 2v8h8V4H4zm2 1h1v6H6V5zm3 0h1v6H9V5z"/></svg>შპალერი</div>
+          <h1 class="page-title">შპალერის კალკულატორი</h1>
+          <p class="page-subtitle">შეიყვანეთ კედლისა და რულონის პარამეტრები</p>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost" id="wpResetBtn"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M4 4v5h5M16 16v-5h-5M4.09 9a7 7 0 110 2"/></svg>გადატვირთვა</button>
+          <button class="btn btn-rose" id="wpCalculateBtn"><svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/></svg>გამოთვლა</button>
+        </div>
+      </header>
+      <div class="content-grid">
+        <div class="input-column">
+          <section class="card" id="wp-wall">
+            <div class="card-header"><div class="card-icon card-icon--rose"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h14v14H3z"/></svg></div><div><h2 class="card-title">კედლის ზომები</h2><p class="card-desc">მოსაფარი კედლის განზომილებები</p></div></div>
+            <div class="card-body">
+  <div class="calculation-mode" style="margin-bottom: 20px; display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(225, 29, 72, 0.05); border-radius: 10px; border: 1px dashed var(--rose);">
+    <label class="switch" style="position: relative; display: inline-block; width: 38px; height: 20px;">
+      <input type="checkbox" id="wpPerimeterMode" style="opacity: 0; width: 0; height: 0;">
+      <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+    </label>
+    <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); font-family: 'Noto Sans Georgian';">ოთახის პერიმეტრით დათვლა</span>
+  </div>
+
+  <div id="wpSingleWallInputs">
+    <div class="form-group">
+      <label class="form-label" for="wpWallWidth">კედლის სიგანე</label>
+      <div class="input-wrap">
+        <input class="form-input" type="number" id="wpWallWidth" value="4.00" min="0.1" step="0.01" />
+        <span class="input-unit">მ</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="wpRoomInputs" style="display: none;">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="wpRoomLength">ოთახის სიგრძე</label>
+        <div class="input-wrap">
+          <input class="form-input" type="number" id="wpRoomLength" value="5.00" min="0.1" step="0.1" />
+          <span class="input-unit">მ</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="wpRoomWidth">ოთახის სიგანე</label>
+        <div class="input-wrap">
+          <input class="form-input" type="number" id="wpRoomWidth" value="4.00" min="0.1" step="0.1" />
+          <span class="input-unit">მ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group" style="margin-top: 15px;">
+    <label class="form-label" for="wpWallHeight">კედლის სიმაღლე</label>
+    <div class="input-wrap">
+      <input class="form-input" type="number" id="wpWallHeight" value="2.50" min="0.1" step="0.01" />
+      <span class="input-unit">მ</span>
+    </div>
+  </div>
+
+  <div class="info-banner info-banner--rose">
+    <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 11H7V7h2v4zm0-6H7V3h2v2z"/></svg>
+    <span> <strong id="wpWallAreaDisplay">10.00 მ²</strong></span>
+  </div>
+</div>  
+          </section>
+          <section class="card" id="wp-roll">
+  <div class="card-header">
+    <div class="card-icon card-icon--rose">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 2a6 6 0 010 12A6 6 0 0110 4zm0 2a4 4 0 100 8 4 4 0 000-8z"/></svg>
+    </div>
+    <div>
+      <h2 class="card-title">რულონის პარამეტრები</h2>
+      <p class="card-desc">შპალერის სიგანე, სიგრძე, ფასი და ნახატის განმეორება</p>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="wpRollWidth">რულონის სიგანე</label>
+        <div class="input-wrap"><select id="wpRollWidth" class="form-input">
+      <option value="0.53">0.53 მ (სტანდარტული)</option>
+      <option value="0.70">0.70 მ</option>
+      <option value="1.06" selected>1.06 მ (განიერი)
+    </select>
+    </option><span class="input-unit">მ</span>
+    </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="wpRollLength">რულონის სიგრძე</label>
+        <div class="input-wrap">
+          <select id="wpRollLength" class="form-input">
+      <option value="10.05" selected>10.05 მ (სტანდარტული)</option>
+      <option value="15.00">15.00 მ</option>
+      <option value="25.00">25.00 მ</option>
+    </select>
+          <span class="input-unit">მ</span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="wpRollPrice">რულონის ფასი</label>
+        <div class="input-wrap"><input class="form-input" type="number" id="wpRollPrice" placeholder="0.00" min="0" step="0.01" /><span class="input-unit">₾</span></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    
+    <div class="form-group">
+      <label class="form-label" for="wpPatternRepeat">ნახატის განმეორება (Rapport) <span class="label-badge label-badge--rose" id="wpPatternBadge">0 სმ</span></label>
+      <input class="range-input range-input--rose" type="range" id="wpPatternRepeat" min="0" max="80" value="0" step="1" />
+      <div class="pattern-repeat-hint">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm1 11H7V7h2v4zm0-6H7V3h2v2z"/></svg>
+        <span id="wpPatternHintText">Rapport 0 — ნახატი არ მეორდება</span>
+      </div>
+    </div>
+  </div>
+</section>
+          <div class="batch-warning-card">
+            <div class="bwc-icon">⚠️</div>
+            <div class="bwc-body"><div class="bwc-title">პარტიის ნომერი — მნიშვნელოვანია!</div><div class="bwc-text">ყოველთვის შეამოწმეთ, რომ ყველა რულონი ერთი პარტიიდანაა (<strong>Batch Number</strong>). განსხვავებული პარტიებს შეიძლება ჰქონდეს ფერის მცირე განსხვავება, რომელიც კედელზე შესამჩნევი გახდება.</div></div>
+          </div>
+        </div>
+        <div class="output-column">
+          <section class="card card--dark">
+            <div class="card-header"><div class="card-icon card-icon--rose"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10z" clip-rule="evenodd"/></svg></div><div><h2 class="card-title">ვიზუალური გეგმა</h2><p class="card-desc">შპალერის ზოლები კედელზე</p></div></div>
+            <div class="card-body canvas-body"><canvas id="wpPreviewCanvas"></canvas></div>
+          </section>
+          <section class="card results-card results-card--rose" id="wp-results">
+            <div class="results-hero"><div class="hero-label hero-label--rose">საჭირო რულონები</div><div class="hero-number hero-number--rose" id="wpRRolls">—</div><div class="hero-sub">რულონი (მომრგვალებული)</div></div>
+            <div class="metrics-grid">
+              <div class="metric"><div class="metric-value" id="wpRStrips">—</div><div class="metric-label">სულ ზოლები</div></div>
+              <div class="metric"><div class="metric-value" id="wpRStripsPerRoll">—</div><div class="metric-label">ზოლი / რულონი</div></div>
+              <div class="metric"><div class="metric-value" id="wpRWallArea">—</div><div class="metric-label">მთლიანი ოთახი მ²</div></div>
+              <div class="metric"><div class="metric-value" id="wpRPurchased">—</div><div class="metric-label">შეძენილი მ²</div></div>
+            </div>
+            <div class="stats-table">
+              <div class="stats-row"><span>კედელი (სიგ. × სიმ.)</span><span id="wpSDims" class="mono">—</span></div>
+              <div class="stats-row"><span>რულონი (სიგ. × სიგ.)</span><span id="wpSRollDims" class="mono">—</span></div>
+              <div class="stats-row"><span>ნახატის განმეორება</span><span id="wpSPattern" class="mono">—</span></div>
+              <div class="stats-row"><span>ეფექტური ზოლის სიმ.</span><span id="wpSStripH" class="mono">—</span></div>
+              <div class="stats-row"><span>სულ ზოლები</span><span id="wpSStrips" class="mono">—</span></div>
+              <div class="stats-row"><span>ზოლი ერთ რულონში</span><span id="wpSPerRoll" class="mono">—</span></div>
+              <div class="stats-row stats-row--accent"><span>საჭირო რულონები</span><span id="wpSRolls" class="mono">—</span></div>
+              <div class="stats-row stats-row--total">
+              <span>ჯამური ღირებულება:</span>
+              <span id="wpRTotalPrice" class="mono" style="color: var(--rose); font-weight: 700;">—</span>
+              </div>
+            </div>
+            <div class="wp-batch-reminder"><svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13"><path d="M8.982 1.566a1.13 1.13 0 00-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 01-1.1 0L7.1 5.995A.905.905 0 018 5zm.002 6a1 1 0 110 2 1 1 0 010-2z"/></svg>შეამოწმეთ <strong>Batch Number</strong> ყველა რულონზე!</div>
+            <div class="results-actions " ><button class="btn btn-copy btn-copy--rose" id="wpCopyBtn"><svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>შედეგის კოპირება</button></div>
+             <button onclick="exportToPDF()" class="btn-primary pdf-btn " style="margin-top: 20px; width: 100%; background: var(--green);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                  </svg>
+                  ანგარიშის ჩამოტვირთვა (PDF)
+              </button>
+          </section>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <template id="openingTemplate">
+  <div class="opening-row card-sub-item">
+    <div class="opening-row-header">
+      <div class="header-controls">
+        <select class="opening-type-select">
+          <option value="door">🚪 კარი</option>
+          <option value="window">🪟 ფანჯარა</option>
+          <option value="mirror">🪞 სარკე</option>
+        </select>
+        
+            <select class="opening-wall-select form-input-sm"></select> 
+        
+        
+      </div>
+
+      <button class="btn-remove" title="წაშლა">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+          <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5.5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="opening-dims">
+      <div class="form-group">
+        <label class="form-label">სიგანე</label>
+        <div class="input-wrap">
+          <input class="form-input opening-width" type="number" min="0.01" step="0.01" />
+          <span class="input-unit">მ</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">სიმაღლე</label>
+        <div class="input-wrap">
+          <input class="form-input opening-height" type="number" min="0.01" step="0.01" />
+          <span class="input-unit">მ</span>
+        </div>
+      </div>
+
+      <div class="form-group opening-area-display">
+        <label class="form-label">ფართობი</label>
+        <div class="input-area-val mono">0.00 მ²</div>
+      </div>
+    </div>
+  </div>
+</template>
+
+  <script src="calculator-logic.js"></script>
+  <script src="wallpaper-logic.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
