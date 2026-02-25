@@ -1152,3 +1152,133 @@ body, html {
     background-size: 14px;
     padding-right: 28px;
 } 
+
+ /* Wall item header: name field + delete button on one row */
+    .wall-item-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .wall-name-wrap {
+      /* flex: 1; */
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.18);
+      border-radius: 8px;
+      padding: 5px 10px;
+    }
+    .wall-name-icon { color: var(--blue, #3b82f6); flex-shrink: 0; }
+    .form-input-inline {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main, #e2e8f0);
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: 'Noto Sans Georgian', sans-serif;
+      min-width: 0;
+    }
+    .form-input-inline::placeholder { color: var(--text-muted, #64748b); font-weight: 400; }
+
+    /* Wall dims row */
+    .wall-dims-row { margin-bottom: 0; }
+
+    /* Per-wall tile <details> */
+    .wall-tile-details {
+      margin-top: 10px;
+      border-top: 1px dashed rgba(59,130,246,0.15);
+      padding-top: 8px;
+    }
+    .wall-tile-summary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--text-muted, #64748b);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      outline: none;
+    }
+    .wall-tile-summary::-webkit-details-marker { display: none; }
+    .wall-tile-summary svg { color: var(--blue, #3b82f6); flex-shrink: 0; }
+    .wall-tile-summary:hover { color: var(--text-main, #e2e8f0); }
+
+    .wall-tile-badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      background: rgba(100,116,139,0.15);
+      color: var(--text-muted, #64748b);
+      border: 1px solid rgba(100,116,139,0.2);
+      margin-left: 4px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .wall-tile-badge--custom {
+      background: rgba(59,130,246,0.15);
+      color: var(--blue, #3b82f6);
+      border-color: rgba(59,130,246,0.3);
+    }
+
+    .wall-tile-inputs { margin-top: 10px; margin-bottom: 0; }
+    .wall-tile-hint {
+      margin: 4px 0 0;
+      font-size: 0.70rem;
+      color: var(--text-muted, #64748b);
+      font-style: italic;
+    }
+
+    /* Per-wall breakdown table in results */
+    .wall-breakdown {
+      margin: 14px 0 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(59,130,246,0.15);
+    }
+    .breakdown-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--blue, #3b82f6);
+      background: rgba(59,130,246,0.08);
+      border-bottom: 1px solid rgba(59,130,246,0.12);
+    }
+    .breakdown-rows { padding: 6px 0; }
+    .breakdown-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 5px 14px;
+      font-size: 0.76rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background 0.15s;
+    }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-row:hover { background: rgba(59,130,246,0.04); }
+    .breakdown-name {
+      color: var(--text-main, #e2e8f0);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .breakdown-tile { color: var(--text-muted, #64748b); }
+    .breakdown-area { color: var(--text-muted, #64748b); }
+    .breakdown-count { color: var(--blue, #3b82f6); font-weight: 700; }
+    .accent-blue { color: var(--blue, #3b82f6); }
+
+    /* Tighten wall-item when it has the new structure */
+    .wall-item.card-sub-item { padding: 12px 14px; }

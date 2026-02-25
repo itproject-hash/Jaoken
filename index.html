@@ -8,6 +8,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+      <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+      </script>
+      script defer src="/_vercel/insights/script.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -133,25 +137,75 @@
 
   <div id="wallsList" class="walls-container">
   <div class="wall-item card-sub-item" id="wall-initial">
-    <div class="form-row">
+
+    <!-- ── Row 1: Name + delete button ── -->
+    <div class="wall-item-header">
+      <div class="wall-name-wrap">
+        <svg class="wall-name-icon" viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+          <path d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z"/>
+        </svg>
+        <input type="text"
+               class="wall-name form-input-inline"
+               placeholder="კედელი 1"
+               value=""
+               maxlength="32"
+               title="კედლის სახელი" />
+      </div>
+      <button type="button" class="btn-remove-wall"
+              onclick="this.closest('.wall-item').remove(); updateLivePreview(); if(typeof runCalculation === 'function') runCalculation();"
+              title="წაშლა">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13">
+          <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5.5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+          <path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ── Row 2: Wall dimensions ── -->
+    <div class="form-row wall-dims-row">
       <div class="form-group">
-        <label class="form-label">კედლის სიგრძე (მ)</label>
+        <label class="form-label">სიგრძე</label>
         <div class="input-wrap">
           <input type="number" class="form-input wall-width" placeholder="0.00" step="0.01" value="3.00">
           <span class="input-unit">მ</span>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">კედლის სიმაღლე (მ)</label>
+        <label class="form-label">სიმაღლე</label>
         <div class="input-wrap">
-          <input type="number" class="form-input wall-height" placeholder="2.50" step="0.01" value="2.50">
+          <input type="number" class="form-input wall-height" placeholder="0.00" step="0.01" value="2.50">
           <span class="input-unit">მ</span>
         </div>
       </div>
-      <button type="button" class="btn-remove-wall" onclick="this.closest('.wall-item').remove(); updateLivePreview(); if(typeof runCalculation === 'function') runCalculation();" title="წაშლა">
-        <i class="fas fa-times">&times</i>
-      </button>
     </div>
+
+    <!-- ── Row 3: Per-wall tile size (collapsible) ── -->
+    <details class="wall-tile-details">
+      <summary class="wall-tile-summary">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11">
+          <path d="M0 0h7v7H0zm9 0h7v7H9zM0 9h7v7H0zm9 0h7v7H9z"/>
+        </svg>
+        ამ კედლის ფილის ზომა <span class="wall-tile-badge">გლობალური</span>
+      </summary>
+      <div class="wall-tile-inputs form-row">
+        <div class="form-group">
+          <label class="form-label">სიგრძე</label>
+          <div class="input-wrap">
+            <input type="number" class="form-input wall-tile-length" placeholder="—" min="1" step="1">
+            <span class="input-unit">სმ</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">სიგანე</label>
+          <div class="input-wrap">
+            <input type="number" class="form-input wall-tile-width" placeholder="—" min="1" step="1">
+            <span class="input-unit">სმ</span>
+          </div>
+        </div>
+      </div>
+      <p class="wall-tile-hint">ცარიელი = გლობალური ფილის ზომა</p>
+    </details>
+
   </div>
 </div>
               

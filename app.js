@@ -201,17 +201,34 @@ const OPENING_DEFAULTS = {
 };
 
 /**
- * Reads all current walls from the DOM and returns [{w, h}, …].
- * Single utility used by preview, calculation, and opening placement.
+ * Reads all current walls from the DOM.
+ * Returns [{w, h, name, tileLCm, tileWCm}, …].
+ *
+ * Per-wall tile sizes fall back to the global defaults (DOM.tileLength / DOM.tileWidth)
+ * when the per-wall fields are empty or zero.  This keeps backward compatibility
+ * with the single global tile size workflow.
  */
 function getCurrentWalls() {
+  const globalTileL = getNum(DOM.tileLength) || 60;
+  const globalTileW = getNum(DOM.tileWidth)  || 30;
+
   const walls = [];
-  document.querySelectorAll('.wall-item').forEach(function(el) {
-    const wEl = el.querySelector('.wall-width');
-    const hEl = el.querySelector('.wall-height');
-    const w   = wEl ? (parseFloat(wEl.value) || 0) : 0;
-    const h   = hEl ? (parseFloat(hEl.value) || 0) : 0;
-    walls.push({ w: w, h: h });   // push even if 0 so wallIndex stays stable
+  document.querySelectorAll('.wall-item').forEach(function(el, idx) {
+    const wEl    = el.querySelector('.wall-width');
+    const hEl    = el.querySelector('.wall-height');
+    const nameEl = el.querySelector('.wall-name');
+    const tlEl   = el.querySelector('.wall-tile-length');
+    const twEl   = el.querySelector('.wall-tile-width');
+
+    const w       = wEl ? (parseFloat(wEl.value)  || 0) : 0;
+    const h       = hEl ? (parseFloat(hEl.value)  || 0) : 0;
+    // Custom name: use entered value, fall back to "კედელი N"
+    const name    = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : ('კედელი ' + (idx + 1));
+    // Per-wall tile sizes: use entered value, fall back to global defaults
+    const tileLCm = (tlEl && parseFloat(tlEl.value) > 0) ? parseFloat(tlEl.value) : globalTileL;
+    const tileWCm = (twEl && parseFloat(twEl.value) > 0) ? parseFloat(twEl.value) : globalTileW;
+
+    walls.push({ w: w, h: h, name: name, tileLCm: tileLCm, tileWCm: tileWCm });
   });
   return walls;
 }
@@ -316,16 +333,15 @@ function renderOpenings() {
     const wallSel = row.querySelector('.opening-wall-select');
     if (wallSel) {
       wallSel.innerHTML = ''; // ვასუფთავებთ ძველ ოპციებს
-      currentWalls.forEach((wall, idx) => {
+      currentWalls.forEach(function(wall, idx) {
         const opt = document.createElement('option');
         opt.value = idx;
-        opt.textContent = 'კედელი ' + (idx + 1);
+        opt.textContent = wall.name || ('კედელი ' + (idx + 1));
         if (opening.wallIndex === idx) opt.selected = true;
         wallSel.appendChild(opt);
       });
       
       wallSel.addEventListener('change', function(e) {
-        // ვიყენებთ updateOpeningField-ს wallIndex-ის შესაცვლელად
         updateOpeningField(opening.id, 'wallIndex', parseInt(e.target.value));
       });
     }
@@ -394,19 +410,17 @@ function updateDeductionBar() {
  */
 function drawWallPanel(canvas, wall, wallIndex, explicitW, explicitH) {
   const dpr = window.devicePixelRatio || 1;
-  // FIX 2: prefer caller-supplied dimensions; fall back to clientWidth only when
-  // the canvas is already in the DOM and has layout (e.g. on a redraw).
   const PW = explicitW || canvas.clientWidth  || 400;
   const PH = explicitH || canvas.clientHeight || 280;
 
-  // რენდერის ხარისხის ოპტიმიზაცია
   canvas.width  = PW * dpr;
   canvas.height = PH * dpr;
 
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const wallNum = wallIndex + 1;
+  // Use wall's custom name (set by getCurrentWalls) or fall back
+  const wallLabel = wall.name || ('კედელი ' + (wallIndex + 1));
 
   const c = {
     bg:          '#0f1117',
@@ -420,11 +434,9 @@ function drawWallPanel(canvas, wall, wallIndex, explicitW, explicitH) {
     label:       '#94a3b8'
   };
 
-  // ფონის გასუფთავება
   ctx.fillStyle = c.bg;
   ctx.fillRect(0, 0, PW, PH);
 
-  // ზომების მიღება — getCurrentWalls() always returns {w, h}
   const surfW = parseFloat(wall.w !== undefined ? wall.w : wall.width)  || 0;
   const surfH = parseFloat(wall.h !== undefined ? wall.h : wall.height) || 0;
 
@@ -432,17 +444,17 @@ function drawWallPanel(canvas, wall, wallIndex, explicitW, explicitH) {
     ctx.fillStyle = c.text;
     ctx.font      = "11px 'JetBrains Mono', monospace";
     ctx.textAlign = 'center';
-    ctx.fillText('კედელი ' + wallNum, PW / 2, PH / 2 - 10);
+    ctx.fillText(wallLabel, PW / 2, PH / 2 - 10);
     ctx.fillText('(შეიყვანეთ ზომები)', PW / 2, PH / 2 + 10);
     return;
   }
 
-  // ფილის მონაცემები
-  const tileL  = (getNum(DOM.tileLength) || 60) / 100;
-  const tileWd = (getNum(DOM.tileWidth)  || 30) / 100;
-  const groutM = (getNum(DOM.groutJoint) || 3)  / 1000;
+  // Per-wall tile data: wall.tileLCm / wall.tileWCm set by getCurrentWalls()
+  // Falls back to global defaults if not set (e.g. quick-mode virtual wall)
+  const tileL  = ((wall.tileLCm || getNum(DOM.tileLength) || 60)) / 100;
+  const tileWd = ((wall.tileWCm || getNum(DOM.tileWidth)  || 30)) / 100;
+  const groutM = (getNum(DOM.groutJoint) || 3) / 1000;
 
-  // მასშტაბირება
   const PAD   = 40;
   const LABEL = 30;
   const scale = Math.min(
@@ -455,7 +467,6 @@ function drawWallPanel(canvas, wall, wallIndex, explicitW, explicitH) {
   const ox    = (PW - drawW) / 2;
   const oy    = LABEL + (PH - LABEL - drawH) / 2;
 
-  // ფილების დახატვა
   const tpx = tileL  * scale;
   const tpy = tileWd * scale;
   const gpx = Math.max(0.5, groutM * scale);
@@ -474,7 +485,6 @@ function drawWallPanel(canvas, wall, wallIndex, explicitW, explicitH) {
     }
   }
 
-  // ნაკერების ხაზები
   ctx.strokeStyle = c.grout;
   ctx.lineWidth   = gpx;
   for (let y = oy; y <= oy + drawH + tpy; y += tpy + gpx) {
@@ -485,54 +495,52 @@ function drawWallPanel(canvas, wall, wallIndex, explicitW, explicitH) {
   }
   ctx.restore();
 
-  // ჩარჩო
   ctx.strokeStyle = c.accentBlue;
   ctx.lineWidth   = 2;
   ctx.strokeRect(ox, oy, drawW, drawH);
 
-  // ზომები
   ctx.fillStyle = c.text;
   ctx.font      = "12px 'JetBrains Mono', monospace";
   ctx.textAlign = 'center';
   ctx.fillText(surfW.toFixed(2) + ' მ', ox + drawW / 2, oy + drawH + 20);
-  
+
   ctx.save();
   ctx.translate(ox - 20, oy + drawH / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.fillText(surfH.toFixed(2) + ' მ', 0, 0);
   ctx.restore();
 
-  // ღიობები (კარები/ფანჯრები)
+  // Openings (doors/windows)
   const ICONS = { door: '🚪', window: '🪟', mirror: '🪞' };
-  // მნიშვნელოვანია, რომ state.openings არსებობდეს
   if (state.openings) {
     state.openings
-      .filter(op => op.wallIndex === wallIndex)
-      .forEach(op => {
+      .filter(function(op) { return op.wallIndex === wallIndex; })
+      .forEach(function(op) {
         const opX = ox + op.x * scale;
         const opY = oy + op.y * scale;
         const opW = op.width  * scale;
         const opH = op.height * scale;
-
         ctx.fillStyle = c.opening;
         ctx.fillRect(opX, opY, opW, opH);
         ctx.strokeStyle = c.accentAmber;
         ctx.lineWidth   = 1.5;
         ctx.strokeRect(opX, opY, opW, opH);
-
-        ctx.font      = `${Math.min(18, opW * 0.5)}px serif`;
+        ctx.font      = Math.min(18, opW * 0.5) + 'px serif';
         ctx.textAlign = 'center';
         ctx.fillStyle = c.accentAmber;
         ctx.fillText(ICONS[op.type] || '?', opX + opW / 2, opY + opH / 2 + 7);
       });
   }
 
-  // სათაური
+  // Header label: custom name + dimensions + tile size
   ctx.fillStyle = c.label;
-  ctx.font      = "bold 13px 'JetBrains Mono', monospace";
+  ctx.font      = "bold 12px 'JetBrains Mono', monospace";
   ctx.textAlign = 'center';
-  ctx.fillText('კედელი ' + wallNum + ' (' + surfW.toFixed(2) + ' × ' + surfH.toFixed(2) + ' მ)', 
-               PW / 2, LABEL - 10);
+  const tileSizeLabel = wall.tileLCm + '×' + wall.tileWCm + 'სმ';
+  ctx.fillText(
+    wallLabel + '  ' + surfW.toFixed(2) + '×' + surfH.toFixed(2) + 'მ  [' + tileSizeLabel + ']',
+    PW / 2, LABEL - 10
+  );
 }
 
 /**
@@ -804,6 +812,88 @@ function renderTileResults(result) {
    MODULE: Tile — Wall List
    ============================================================ */
 
+/**
+ * Builds the HTML string for a single wall-item row.
+ * Called by addWall() and also used for the initial wall in HTML.
+ * Kept as a function so the structure is defined in one place.
+ */
+function buildWallHTML(wallId, wallNum, defaultW, defaultH) {
+  const w = defaultW || '';
+  const h = defaultH || '';
+  return `
+    <div class="wall-item card-sub-item" id="wall-${wallId}" data-wall-num="${wallNum}">
+
+      <!-- ── Row 1: Name + delete button ── -->
+      <div class="wall-item-header">
+        <div class="wall-name-wrap">
+          <svg class="wall-name-icon" viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+            <path d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z"/>
+          </svg>
+          <input type="text"
+                 class="wall-name form-input-inline"
+                 placeholder="კედელი ${wallNum}"
+                 value=""
+                 maxlength="32"
+                 title="კედლის სახელი" />
+        </div>
+        <button type="button" class="btn-remove-wall"
+                onclick="this.closest('.wall-item').remove(); updateLivePreview(); runCalculation();"
+                title="კედლის წაშლა">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13">
+            <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5.5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+            <path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ── Row 2: Wall dimensions ── -->
+      <div class="form-row wall-dims-row">
+        <div class="form-group">
+          <label class="form-label">სიგრძე</label>
+          <div class="input-wrap">
+            <input type="number" class="form-input wall-width" placeholder="0.00" step="0.01" min="0" value="${w}">
+            <span class="input-unit">მ</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">სიმაღლე</label>
+          <div class="input-wrap">
+            <input type="number" class="form-input wall-height" placeholder="0.00" step="0.01" min="0" value="${h}">
+            <span class="input-unit">მ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Row 3: Per-wall tile size (collapsible) ── -->
+      <details class="wall-tile-details">
+        <summary class="wall-tile-summary">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11">
+            <path d="M0 0h7v7H0zm9 0h7v7H9zM0 9h7v7H0zm9 0h7v7H9z"/>
+          </svg>
+          ამ კედლის ფილის ზომა <span class="wall-tile-badge">გლობალური</span>
+        </summary>
+        <div class="wall-tile-inputs form-row">
+          <div class="form-group">
+            <label class="form-label">სიგრძე</label>
+            <div class="input-wrap">
+              <input type="number" class="form-input wall-tile-length" placeholder="—" min="1" step="1">
+              <span class="input-unit">სმ</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">სიგანე</label>
+            <div class="input-wrap">
+              <input type="number" class="form-input wall-tile-width" placeholder="—" min="1" step="1">
+              <span class="input-unit">სმ</span>
+            </div>
+          </div>
+        </div>
+        <p class="wall-tile-hint">ცარიელი = გლობალური ფილის ზომა</p>
+      </details>
+
+    </div>`;
+}
+
 function addWall() {
   const wallsList = document.getElementById('wallsList');
   if (!wallsList) return;
@@ -811,35 +901,14 @@ function addWall() {
   const wallId  = Date.now();
   const wallNum = wallsList.querySelectorAll('.wall-item').length + 1;
 
-  const wallHTML = `
-    <div class="wall-item card-sub-item" id="wall-${wallId}" data-wall-num="${wallNum}">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">კედელი ${wallNum} — სიგრძე (მ)</label>
-          <div class="input-wrap">
-            <input type="number" class="form-input wall-width" placeholder="0.00" step="0.01" min="0">
-            <span class="input-unit">მ</span>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">კედელი ${wallNum} — სიმაღლე (მ)</label>
-          <div class="input-wrap">
-            <input type="number" class="form-input wall-height" placeholder="0.00" step="0.01" min="0">
-            <span class="input-unit">მ</span>
-          </div>
-        </div>
-        <button type="button" class="btn-remove-wall"
-          onclick="this.closest('.wall-item').remove(); updateLivePreview(); runCalculation();"
-          title="კედლის წაშლა">&times;</button>
-      </div>
-    </div>`;
+  wallsList.insertAdjacentHTML('beforeend', buildWallHTML(wallId, wallNum, '', ''));
 
-  wallsList.insertAdjacentHTML('beforeend', wallHTML);
-
+  // Wire auto-sync for the new wall's inputs
   const newWall = document.getElementById('wall-' + wallId);
   if (newWall) {
     newWall.querySelectorAll('input').forEach(function(input) {
       input.addEventListener('input', function() {
+        updateWallTileBadge(newWall);
         updateLivePreview();
         runCalculation();
       });
@@ -847,65 +916,167 @@ function addWall() {
   }
 }
 
+/**
+ * Updates the "გლობალური / custom" badge shown inside the per-wall tile
+ * <details> summary whenever the user types into the tile-size fields.
+ */
+function updateWallTileBadge(wallEl) {
+  const tlEl  = wallEl.querySelector('.wall-tile-length');
+  const twEl  = wallEl.querySelector('.wall-tile-width');
+  const badge = wallEl.querySelector('.wall-tile-badge');
+  if (!badge) return;
+  const hasL = tlEl && parseFloat(tlEl.value) > 0;
+  const hasW = twEl && parseFloat(twEl.value) > 0;
+  if (hasL || hasW) {
+    const lv = (tlEl && tlEl.value) ? tlEl.value : '—';
+    const wv = (twEl && twEl.value) ? twEl.value : '—';
+    badge.textContent = lv + '×' + wv + ' სმ';
+    badge.classList.add('wall-tile-badge--custom');
+  } else {
+    badge.textContent = 'გლობალური';
+    badge.classList.remove('wall-tile-badge--custom');
+  }
+}
+
 /* ============================================================
-   MODULE: Tile — Main Calculation  (FIX 3)
+   MODULE: Tile — Main Calculation
    ============================================================ */
 
 function runCalculation() {
-  // 1. ვამზადებთ კედლების მასივს, რომელსაც TileLogic-ს გადავცემთ
   let finalWallsForLogic = [];
 
   if (isQuickMode) {
     // --- სწრაფი რეჟიმი ---
     const directArea = parseFloat(document.getElementById('directAreaInput').value) || 0;
-    
-    if (directArea <= 0) {
-      // თუ ფართობი ცარიელია, ვაჩერებთ გამოთვლას და ვასუფთავებთ შედეგებს
-      clearResults();
-      return;
-    }
-
-    // ვქმნით ერთ "ვირტუალურ" კედელს, რომლის ფართობიც მომხმარებლის მიერ ჩაწერილი ციფრია
-    // სიმაღლეს ვიღებთ 1-ს, რათა W * 1 = ფართობს
-    finalWallsForLogic = [{ w: directArea, h: 1 }];
+    if (directArea <= 0) { clearResults(); return; }
+    // Virtual single wall; uses global tile size
+    const globalTileL = getNum(DOM.tileLength) || 60;
+    const globalTileW = getNum(DOM.tileWidth)  || 30;
+    finalWallsForLogic = [{ w: directArea, h: 1, name: 'სწრაფი', tileLCm: globalTileL, tileWCm: globalTileW }];
   } else {
     // --- დეტალური რეჟიმი ---
-    const walls = getCurrentWalls().filter(function(w) { 
-      return w.w > 0 && w.h > 0; 
-    });
-
-    if (walls.length === 0) {
-      clearResults();
-      return;
-    }
+    const walls = getCurrentWalls().filter(function(w) { return w.w > 0 && w.h > 0; });
+    if (walls.length === 0) { clearResults(); return; }
     finalWallsForLogic = walls;
   }
 
-  // 2. ვამზადებთ პარამეტრებს საანგარიშო ბიბლიოთეკისთვის
-  const params = {
-    walls:        finalWallsForLogic,
-    // თუ სწრაფი რეჟიმია, შეგვიძლია ღიობები (კარ-ფანჯარა) არ გამოვაკლოთ, ან დავტოვოთ
-    openings:     state.openings.map(function(o) { 
-      return { width: o.width, height: o.height }; 
-    }),
-    tileLengthCm: getNum(DOM.tileLength)  || 60,
-    tileWidthCm:  getNum(DOM.tileWidth)   || 30,
-    groutMm:      getNum(DOM.groutJoint),
-    wastePercent: getNum(DOM.wastePct),
-    sqmPerBox:    getNum(DOM.sqmPerBox)   || 1.44
-  };
+  const groutMm     = getNum(DOM.groutJoint);
+  const wastePercent= getNum(DOM.wastePct);
+  const sqmPerBox   = getNum(DOM.sqmPerBox) || 1.44;
 
-  // console.log('გამოთვლა აქტიურია:', params);
+  // Run per-wall calculations, aggregating totals
+  let totalGross      = 0;
+  let totalDeduction  = 0;
+  let totalNet        = 0;
+  let totalBase       = 0;
+  let totalFinal      = 0;
+  let totalPurchase   = 0;
+  const wallBreakdown = [];
 
-  // 3. ვასრულებთ მათემატიკურ გათვლას
   try {
-    if (window.TileLogic && typeof window.TileLogic.calculateAll === 'function') {
-      const result = window.TileLogic.calculateAll(params);
-      renderTileResults(result);
-    }
+    if (!window.TileLogic || typeof window.TileLogic.calculateAll !== 'function') return;
+
+    const openingsForCalc = state.openings.map(function(o) { return { width: o.width, height: o.height }; });
+
+    finalWallsForLogic.forEach(function(wall) {
+      // Each wall uses its own tile size
+      const params = {
+        walls:        [{ w: wall.w, h: wall.h }],
+        openings:     openingsForCalc,  // openings shared across walls (by wallIndex filtering is visual only)
+        tileLengthCm: wall.tileLCm,
+        tileWidthCm:  wall.tileWCm,
+        groutMm:      groutMm,
+        wastePercent: wastePercent,
+        sqmPerBox:    sqmPerBox
+      };
+
+      const r = window.TileLogic.calculateAll(params);
+      totalGross     += r.grossArea;
+      totalDeduction += r.totalDeduction;
+      totalNet       += r.netArea;
+      totalBase      += r.baseCount;
+      totalFinal     += r.finalCount;
+      totalPurchase  += r.purchaseArea;
+
+      wallBreakdown.push({
+        name:       wall.name,
+        tileLCm:    wall.tileLCm,
+        tileWCm:    wall.tileWCm,
+        grossArea:  r.grossArea,
+        netArea:    r.netArea,
+        finalCount: r.finalCount,
+        boxCount:   r.boxCount
+      });
+    });
+
+    // Aggregate box count from total purchase area
+    const totalBoxes = sqmPerBox > 0 ? Math.ceil(totalPurchase / sqmPerBox) : 0;
+
+    const aggregated = {
+      grossArea:       totalGross,
+      totalDeduction:  totalDeduction,
+      netArea:         totalNet,
+      baseCount:       totalBase,
+      finalCount:      totalFinal,
+      purchaseArea:    totalPurchase,
+      boxCount:        totalBoxes,
+      wasteTiles:      totalFinal - totalBase,
+      effectiveTileArea: null  // mixed tiles — don't show single value
+    };
+
+    renderTileResults(aggregated);
+    renderWallBreakdown(wallBreakdown);
+
   } catch (e) {
     console.error('გამოთვლა ვერ მოხერხდა:', e);
   }
+}
+
+/**
+ * Renders the per-wall breakdown table below the main results.
+ * Creates the table container on first call; updates it on subsequent calls.
+ */
+function renderWallBreakdown(breakdown) {
+  // Find or create the breakdown container inside the results card
+  let container = document.getElementById('wallBreakdownTable');
+  if (!container) {
+    const resultsCard = document.querySelector('.results-card:not(.results-card--rose)');
+    if (!resultsCard) return;
+    container = document.createElement('div');
+    container.id = 'wallBreakdownTable';
+    container.className = 'wall-breakdown';
+    // Insert before the results-actions div
+    const actionsDiv = resultsCard.querySelector('.results-actions');
+    if (actionsDiv) {
+      resultsCard.insertBefore(container, actionsDiv);
+    } else {
+      resultsCard.appendChild(container);
+    }
+  }
+
+  if (breakdown.length <= 1) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  container.innerHTML = `
+    <div class="breakdown-header">
+      <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+        <path d="M0 0h7v7H0zm9 0h7v7H9zM0 9h7v7H0zm9 0h7v7H9z"/>
+      </svg>
+      კედელი → ფილა (დეტალური)
+    </div>
+    <div class="breakdown-rows">
+      ${breakdown.map(function(b) {
+        return `<div class="breakdown-row">
+          <span class="breakdown-name">${b.name}</span>
+          <span class="breakdown-tile mono">${b.tileLCm}×${b.tileWCm}სმ</span>
+          <span class="breakdown-area mono">${b.netArea.toFixed(2)}მ²</span>
+          <span class="breakdown-count mono accent-blue">${b.finalCount}ც.</span>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 // დამხმარე ფუნქცია შედეგების გასასუფთავებლად, როცა ინპუტი ცარიელია
@@ -916,37 +1087,49 @@ function clearResults() {
 }
 
 function resetTiles() {
-  // Clear wall list (except first wall item if present)
   const wallsList = document.getElementById('wallsList');
   if (wallsList) {
     const items = wallsList.querySelectorAll('.wall-item');
     items.forEach(function(item, i) {
       if (i === 0) {
-        // Reset first wall values
-        const wi = item.querySelector('.wall-width');
-        const hi = item.querySelector('.wall-height');
-        if (wi) wi.value = '';
-        if (hi) hi.value = '';
+        // Reset first wall to blank
+        const wi  = item.querySelector('.wall-width');
+        const hi  = item.querySelector('.wall-height');
+        const ni  = item.querySelector('.wall-name');
+        const tli = item.querySelector('.wall-tile-length');
+        const twi = item.querySelector('.wall-tile-width');
+        if (wi)  wi.value  = '';
+        if (hi)  hi.value  = '';
+        if (ni)  ni.value  = '';
+        if (tli) tli.value = '';
+        if (twi) twi.value = '';
+        updateWallTileBadge(item);
       } else {
         item.remove();
       }
     });
   }
 
-  if (DOM.tileLength)    DOM.tileLength.value    = '60';
-  if (DOM.tileWidth)     DOM.tileWidth.value     = '30';
-  if (DOM.groutJoint)    DOM.groutJoint.value    = '3';
-  if (DOM.wastePct)      DOM.wastePct.value      = '0';
-  if (DOM.sqmPerBox)     DOM.sqmPerBox.value     = '1.44';
-  if (DOM.wasteBadge)    DOM.wasteBadge.textContent = '0%';
+  if (DOM.tileLength)  DOM.tileLength.value  = '60';
+  if (DOM.tileWidth)   DOM.tileWidth.value   = '30';
+  if (DOM.groutJoint)  DOM.groutJoint.value  = '3';
+  if (DOM.wastePct)    DOM.wastePct.value    = '0';
+  if (DOM.sqmPerBox)   DOM.sqmPerBox.value   = '1.44';
+  if (DOM.wasteBadge)  DOM.wasteBadge.textContent = '0%';
   updateRangeBackground(DOM.wastePct);
   clearActivePattern();
   state.openings = [];
   state.nextId   = 1;
   renderOpenings();
+
+  // Clear breakdown table
+  const bt = document.getElementById('wallBreakdownTable');
+  if (bt) bt.style.display = 'none';
+
   [DOM.rTilesCount, DOM.rBoxes, DOM.rPurchaseSqm, DOM.rNetSqm, DOM.rWasteTiles,
    DOM.sGross, DOM.sDeduction, DOM.sNet, DOM.sTileArea, DOM.sBaseCount, DOM.sFinalCount, DOM.sLayout]
     .forEach(function(el) { if (el) el.textContent = '—'; });
+
   state.lastResult = null;
   updateLivePreview();
 }
@@ -954,29 +1137,41 @@ function resetTiles() {
 function copyTileResult() {
   if (!state.lastResult) { alert('პირველ რიგში გამოთვლა ჩაატარეთ.'); return; }
   const r = state.lastResult;
-  const p = gatherTileParams();
+  const groutMm     = getNum(DOM.groutJoint);
+  const wastePercent= getNum(DOM.wastePct);
+  const sqmPerBox   = getNum(DOM.sqmPerBox) || 1.44;
   const patternLine = state.activePattern
     ? TileLogic.getLayoutPattern(state.activePattern).labelKa
     : 'მომხმარებელი';
+
+  // Build per-wall lines
+  const walls = getCurrentWalls().filter(function(w) { return w.w > 0 && w.h > 0; });
+  const wallLines = walls.map(function(w, i) {
+    return '  ' + (i + 1) + '. ' + w.name +
+           '  (' + w.w.toFixed(2) + '×' + w.h.toFixed(2) + 'მ)' +
+           '  ფილა: ' + w.tileLCm + '×' + w.tileWCm + 'სმ';
+  });
 
   const txt = [
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     '  ჭკვიანი ფილების კალკულატორი',
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-    '', '📐 ზედაპირი',
+    '', '📐 კედლები',
+    ...wallLines,
+    '', '📐 ფართობი',
     '  ბრუტო ფართობი     : ' + r.grossArea.toFixed(2)      + ' მ²',
     '  გამოქვითვა        : ' + r.totalDeduction.toFixed(2) + ' მ²',
     '  წმინდა ფართობი    : ' + r.netArea.toFixed(2)        + ' მ²',
-    '', '🟫 ფილა',
-    '  ზომა               : ' + p.tileLengthCm + ' × ' + p.tileWidthCm + ' სმ',
-    '  ნაკეთობა           : ' + p.groutMm      + ' მმ',
+    '', '🟫 გლობალური ფილა',
+    '  ზომა               : ' + (getNum(DOM.tileLength) || 60) + ' × ' + (getNum(DOM.tileWidth) || 30) + ' სმ',
+    '  ნაკეთობა           : ' + groutMm      + ' მმ',
     '  დაგების სტილი      : ' + patternLine,
-    '  ნარჩენი ფაქტორი    : ' + p.wastePercent + '%',
+    '  ნარჩენი ფაქტორი    : ' + wastePercent + '%',
     '', '📦 შედეგი',
     '  ფილები (ნარჩენის გარეშე) : ' + r.baseCount  + ' ც.',
     '  ფილები (ნარჩენით)        : ' + r.finalCount + ' ც.',
     '  შესყიდვის ფართობი        : ' + r.purchaseArea.toFixed(2) + ' მ²',
-    '  საჭირო კოლოფები          : ' + r.boxCount + ' ც. (' + p.sqmPerBox + ' მ²/კოლ.)',
+    '  საჭირო კოლოფები          : ' + r.boxCount + ' ც. (' + sqmPerBox + ' მ²/კოლ.)',
     '', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
   ].join('\n');
 
@@ -1530,14 +1725,25 @@ function init() {
     });
   }
 
-  // TILES: wallsList delegated input (covers dynamically added walls)
+  // TILES: wallsList delegated input — covers all dynamically added wall fields
   const wallsList = document.getElementById('wallsList');
   if (wallsList) {
     wallsList.addEventListener('input', function(e) {
-      if (e.target.classList.contains('wall-width') || e.target.classList.contains('wall-height')) {
+      const cls = e.target.classList;
+      if (cls.contains('wall-width') || cls.contains('wall-height') ||
+          cls.contains('wall-name')  ||
+          cls.contains('wall-tile-length') || cls.contains('wall-tile-width')) {
+        // Update the per-wall tile badge if a tile-size field changed
+        const wallEl = e.target.closest('.wall-item');
+        if (wallEl) updateWallTileBadge(wallEl);
         updateLivePreview();
         runCalculation();
       }
+    });
+    // Also wire up any pre-existing walls (the initial wall in HTML)
+    wallsList.querySelectorAll('.wall-item').forEach(function(wallEl) {
+      // Badge initialization
+      updateWallTileBadge(wallEl);
     });
   }
 
